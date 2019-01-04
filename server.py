@@ -1,0 +1,157 @@
+#!/usr/bin/python
+
+import sys
+import socket
+import logging
+from threading import Thread
+
+from dice_roller import roll as dice_roll
+
+BUF_SIZE = 1024
+
+# class RemoteClient:
+
+#     def __init__(self, host, socket, address):
+#         self.host = host
+#         self.outbox = collections.deque()
+#         self.username = ""
+#         self.validated = False
+
+#     def say(self, message):
+#         self.outbox.append(message)
+
+#     def handle_read(self):
+#         if client_message.startswith("ROLL:") and self.username != "":
+#             response = dice_roll(client_message[5:])
+#             if response == "Invalid request\n---------------------":
+#                 self.say(response)
+#             else:
+#                 put_string = self.username + "\n    " + client_message[5:] + "\n    " + response + "\n---------------------"
+#                 self.host.broadcast(put_string)
+#             return
+
+
+#     def handle_write(self):
+#         if not self.outbox:
+#             return
+#         message = self.outbox.popleft()
+#         if len(message) > BUF_SIZE:
+#             raise ValueError("Message too long")
+#         self.send(message)
+
+class RClient:
+    def __init__(self, username, conn, host):
+        self.username = username
+        self.conn = conn
+        self.host = host
+    
+    def get_username(self):
+        return self.username
+    
+    def get_conn(self):
+        return self.conn
+
+class Server:
+    log = logging.getLogger("Server")
+
+    def __init__(self, address = ("localhost", 8090), password = "fish"):
+        self.log.info(" Server started on: {0}\n     Password is: {1}\n     ---------------------".format(address, password))
+
+        self.password = password
+        self.remote_clients = {}
+        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+        self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self.sock.bind(address)
+        self.sock.listen(1)
+
+        self.run_loop()
+
+    def run_loop(self):
+        thr_pool = []
+        while True:
+            try:
+                conn, addr = self.sock.accept()
+            except socket.timeout:
+                continue
+            tmpThr = Thread(target = self.handle_accept(conn, addr))
+            tmpThr.daemon = True
+            tmpThr.start()
+            thr_pool.append(tmpThr)
+            # Check for dead conns
+            # Break for something
+
+        for thr in thr_pool:
+            thr.join()
+
+    # Loop threads on this
+    def handle_accept(self, conn, addr):
+        self.log.info("Accepted client at %s", addr)
+
+        while True:
+            # Put error onto `conn`
+            if self.check_connection(conn) and self.check_connection(conn):
+                break
+
+        rclient = self.remote_clients[conn.recv(BUF_SIZE).decode()]
+        self.begin_rolling(rclient)
+
+    def begin_rolling(self, rclient):
+        while True:
+            line = rclient.conn.recv(BUF_SIZE).decode()
+            roll_info = dice_roll(line[5:])
+            print("FISH: {0}".format(line))
+
+            if roll_info.startswith("Invalid"):
+                self.log.info("ROLL: {1}, {0}".format(line[5:], roll_info))
+                rclient.get_conn().sendall(roll_info.encode())
+            else:
+                put_string = rclient.get_username() + ":\n    " + line + "\n    " + roll_info + "\n---------------------"
+                self.log.info("Message {0}".format(put_string))
+                self.broadcast(put_string)
+
+    def check_connection(self, conn):
+        client_message = conn.recv(BUF_SIZE).decode()
+        # print(client_message)
+
+        if client_message.startswith("PSWD:"):
+            pswd_succ = int(client_message[5:] == self.password)
+            if pswd_succ:
+                self.log.info("Connection {0} gave correct password".format(conn))
+            conn.sendall(str(pswd_succ).encode())
+            return pswd_succ
+
+        if client_message.startswith("USER:"):
+            username = client_message[5:]
+            if username in self.remote_clients.keys():
+                return False
+            self.remote_clients[username] = RClient(username, conn, self)
+            conn.sendall("1".encode())
+            return True
+
+        return False
+
+    def broadcast(self, message):
+        self.log.info("Broadcasting message: %s", message)
+        for rc_username in self.remote_clients:
+            self.remote_clients[rc_username].get_conn().sendall(message.encode())
+
+if __name__ == "__main__":
+    socket.setdefaulttimeout(15)
+    logging.basicConfig(level = logging.INFO)
+
+    sock_addr, sock_port, password = "localhost", 8090, "fish"
+
+    show_help = "Usage\n\t./server.rb [<address> <port> [<password]]"
+
+    if "-h" in sys.argv or "--help" in sys.argv:
+        print(show_help)
+        quit()
+
+    argv = sys.argv[1:]
+    if len(argv) >= 2:
+        sock_addr, sock_port = argv[0], int(argv[1])
+    if len(argv) == 3:
+        pswd = argv[2]
+
+    Server((sock_addr, sock_port), password)
