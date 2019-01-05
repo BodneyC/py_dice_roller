@@ -9,36 +9,6 @@ from dice_roller import roll as dice_roll
 
 BUF_SIZE = 1024
 
-# class RemoteClient:
-
-#     def __init__(self, host, socket, address):
-#         self.host = host
-#         self.outbox = collections.deque()
-#         self.username = ""
-#         self.validated = False
-
-#     def say(self, message):
-#         self.outbox.append(message)
-
-#     def handle_read(self):
-#         if client_message.startswith("ROLL:") and self.username != "":
-#             response = dice_roll(client_message[5:])
-#             if response == "Invalid request\n---------------------":
-#                 self.say(response)
-#             else:
-#                 put_string = self.username + "\n    " + client_message[5:] + "\n    " + response + "\n---------------------"
-#                 self.host.broadcast(put_string)
-#             return
-
-
-#     def handle_write(self):
-#         if not self.outbox:
-#             return
-#         message = self.outbox.popleft()
-#         if len(message) > BUF_SIZE:
-#             raise ValueError("Message too long")
-#         self.send(message)
-
 class RClient:
     def __init__(self, username, conn, host):
         self.username = username
@@ -55,7 +25,7 @@ class Server:
     log = logging.getLogger("Server")
 
     def __init__(self, address = ("localhost", 8090), password = "fish"):
-        self.log.info(" Server started on: {0}\n     Password is: {1}\n     ---------------------".format(address, password))
+        self.log.info(" Server started on: {0}\n     Password is: {1}".format(address, password))
 
         self.password = password
         self.remote_clients = {}
@@ -106,7 +76,7 @@ class Server:
                 self.log.info("ROLL: {1}, {0}".format(line[5:], roll_info))
                 rclient.get_conn().sendall(roll_info.encode())
             else:
-                put_string = rclient.get_username() + ":\n    " + line + "\n    " + roll_info + "\n---------------------"
+                put_string = rclient.get_username() + ":\n    " + line + "\n    " + roll_info
                 self.log.info("Message {0}".format(put_string))
                 self.broadcast(put_string)
 
@@ -137,7 +107,7 @@ class Server:
             self.remote_clients[rc_username].get_conn().sendall(message.encode())
 
 if __name__ == "__main__":
-    socket.setdefaulttimeout(15)
+    socket.setdefaulttimeout(100)
     logging.basicConfig(level = logging.INFO)
 
     sock_addr, sock_port, password = "localhost", 8090, "fish"

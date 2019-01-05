@@ -41,8 +41,9 @@ class Client:
     def handle_read(self):
         while True:
             message = self.sock.recv(BUF_SIZE).decode()
-            self.textbox.append(message.split("\n"))
-            print(message)
+            return message
+            # self.textbox.append(message.split("\n"))
+            # print(message)
             
 if __name__ == "__main__":
     sock_addr, sock_port, pswd = "localhost", 8090, ""

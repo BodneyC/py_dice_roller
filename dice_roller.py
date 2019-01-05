@@ -5,9 +5,9 @@ import sys
 import random
 
 def validate(message):
-    if re.match("/^\d+?d\d+?([+-]\d+?)*$/", message):
-        return 1
-    return 0
+    if re.match(r"^\d+?d\d+?([+-]\d+?)*$", message):
+        return 0
+    return 1
 
 def roll_dice(die_num = 0, sides = 0):
     total = 0
@@ -22,7 +22,7 @@ def roll_dice(die_num = 0, sides = 0):
 def roll(message):
     message = message.replace(" ", "")
 
-    if validate(message) == 1:
+    if validate(message):
         return "Invalid request"
 
     # Split on [d+-] and keep
