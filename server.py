@@ -60,29 +60,45 @@ class Server:
 
         while True:
             # Put error onto `conn`
-            if self.check_connection(conn) and self.check_connection(conn):
+            try:
+                if self.check_connection(conn) and self.check_connection(conn):
+                    break
+            except (BrokenPipeError, socket.timeout) as e:
+                conn = None
+                self.log.warn(e)
                 break
 
-        rclient = self.remote_clients[conn.recv(BUF_SIZE).decode()]
-        self.begin_rolling(rclient)
+        if conn:
+            rclient = self.remote_clients[conn.recv(BUF_SIZE).decode()]
+            self.begin_rolling(rclient)
 
     def begin_rolling(self, rclient):
         while True:
-            line = rclient.conn.recv(BUF_SIZE).decode()
+            try:
+                line = rclient.conn.recv(BUF_SIZE).decode()
+            except (BrokenPipeError, socket.timeout) as e:
+                self.log.warn(e)
+                del self.remote_clients[rclient.username]
+                return
+
             roll_info = dice_roll(line[5:])
-            print("FISH: {0}".format(line))
 
             if roll_info.startswith("Invalid"):
                 self.log.info("ROLL: {1}, {0}".format(line[5:], roll_info))
-                rclient.get_conn().sendall(roll_info.encode())
+                try:
+                    rclient.get_conn().sendall(roll_info.encode())
+                except BrokenPipeError as e:
+                    self.log.warn(e)
+                    del self.remote_clients[rclient.username]
+                    return
             else:
                 put_string = rclient.get_username() + ":\n    " + line + "\n    " + roll_info
                 self.log.info("Message {0}".format(put_string))
                 self.broadcast(put_string)
 
+    # Errors catch in self.handle_accept()
     def check_connection(self, conn):
         client_message = conn.recv(BUF_SIZE).decode()
-        # print(client_message)
 
         if client_message.startswith("PSWD:"):
             pswd_succ = int(client_message[5:] == self.password)
@@ -104,7 +120,8 @@ class Server:
     def broadcast(self, message):
         self.log.info("Broadcasting message: %s", message)
         for rc_username in self.remote_clients:
-            self.remote_clients[rc_username].get_conn().sendall(message.encode())
+            if self.remote_clients[rc_username]:
+                self.remote_clients[rc_username].get_conn().sendall(message.encode())
 
 if __name__ == "__main__":
     socket.setdefaulttimeout(100)

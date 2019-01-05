@@ -91,22 +91,24 @@ class MainScreen(Screen):
     def _keyboard_closed(self):
         print("Keyboard lost")
         # self._keyboard.unbind(on_key_down=self._on_keyboard_down)
-        self._keyboard = None 
+        # self._keyboard = None 
 
     def _on_keyboard_down(self, keyboard, keycode, text, modifiers):
-        global client
+        global main_check, client, sock
 
-        if keycode[1] == 'enter': # :enter
-            message = self.ids["roll_box"].text
-            print(message)
-            if re.match(r"^[Qq].*", message):
-                self.thr.join()
-                sock.close()
-                App.get_running_app.stop()
-                return # shouldn't be needed
+        if main_check:
+            if keycode[1] == 'enter': # :enter
+                message = self.ids["roll_box"].text
+                print(message)
+                if re.match(r"^[Qq].*", message):
+                    self.thr.join()
+                    sock.close()
+                    Window.close()
+                    App.get_running_app.close()
 
-            client.say_roll(self.ids["roll_box"].text)
-            self.ids["roll_box"].text = ""
+                client.say_roll(self.ids["roll_box"].text)
+                self.ids["roll_box"].text = ""
+                self.ids["roll_box"].focus = True
 
 
 class Manager(ScreenManager):
@@ -120,6 +122,7 @@ class main_app(App):
 
     def build(self):
         self.root = Builder.load_file('client_iface.kv')
+        self.title = "Python Dice Roller"
         global manager
         manager = Manager()
         return manager

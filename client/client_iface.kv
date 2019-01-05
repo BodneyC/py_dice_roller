@@ -66,13 +66,20 @@
             id: msg_box
             background_disabled_normal: ''
             disabled: True
-            text: "Welcome..."
+            text: "Welcome...\n--------------------------------------------------"
             # content_height: app.co_window_y * .48
-        TextInput:
-            id: roll_box
+        GridLayout:
             size_hint_y: .1
-            multiline: False
-            height: 40
+            rows: 1
+            cols: 2
+            Label:
+                size_hint_x: .2
+                text: "Message:"
+            TextInput:
+                background_disabled_normal: ''
+                id: roll_box
+                multiline: False
+                height: 40
 
 <Manager>:
     # InputScreen first but Main atm for testing
