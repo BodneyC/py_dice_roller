@@ -16,22 +16,22 @@ class Client:
         self.textbox = []
 
     def check_credentials(self, password, username):
-        self.say("PSWD:" + password)
+        self.say('PSWD:' + password)
         # print(self.sock.recv(BUF_SIZE))
         if not int(self.sock.recv(BUF_SIZE).decode()):
-            return False, "password"
+            return False, 'password'
 
-        self.say("USER:" + username)
+        self.say('USER:' + username)
         # print(self.sock.recv(BUF_SIZE))
         if not int(self.sock.recv(BUF_SIZE).decode()):
-            return False, "username"
+            return False, 'username'
 
         self.say(username)
 
-        return True, ""
+        return True, ''
 
     def say_roll(self, message):
-        self.say("ROLL:" + message)
+        self.say('ROLL:' + message)
 
     def say(self, message):
         if len(message) > BUF_SIZE:
@@ -42,15 +42,15 @@ class Client:
         while True:
             message = self.sock.recv(BUF_SIZE).decode()
             return message
-            # self.textbox.append(message.split("\n"))
+            # self.textbox.append(message.split('\n'))
             # print(message)
-            
-if __name__ == "__main__":
-    sock_addr, sock_port, pswd = "localhost", 8090, ""
 
-    show_help = "Usage\n\t./client.rb [<address> <port> [<password>]]"
+if __name__ == '__main__':
+    sock_addr, sock_port, pswd = 'localhost', 8090, ''
 
-    if "-h" in sys.argv or "--help" in sys.argv:
+    show_help = 'Usage\n\t./client.rb [<address> <port> [<password>]]'
+
+    if '-h' in sys.argv or '--help' in sys.argv:
         print(show_help)
         quit()
 
@@ -66,15 +66,15 @@ if __name__ == "__main__":
             sock.connect((sock_addr, int(sock_port)))
             break
         except ConnectionRefusedError as msg:
-            print("Connection failed, retry...")
+            print('Connection failed, retry...')
             print(msg)
-        sock_addr, sock_port = input("Address: "), input("Port: ")
+        sock_addr, sock_port = input('Address: '), input('Port: ')
 
-    print("Connected successfully...")
+    print('Connected successfully...')
     client = Client(sock)
 
     while True:
-        password, username = input("Password: "), input("Username: ")
+        password, username = input('Password: '), input('Username: ')
         if client.check_credentials(password, username):
             break
 
@@ -83,8 +83,8 @@ if __name__ == "__main__":
     thr.start()
 
     while True:
-        line = input("Roll: ")
-        if line.startswith("q"):
+        line = input('Roll: ')
+        if line.startswith('q'):
             break
         client.say_roll(line)
 

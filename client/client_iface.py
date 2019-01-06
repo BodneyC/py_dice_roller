@@ -14,7 +14,9 @@ from kivy.uix.gridlayout import GridLayout
 from kivy.uix.screenmanager import ScreenManager, Screen
 from kivy.uix.popup import Popup
 from kivy.core.window import Window
+from kivy.config import Config
 
+Config.set('input', 'mouse', 'mouse,multitouch_on_demand')
 Window.clearcolor = (.66, .38, .78, 1)
 
 in_window_x, in_window_y = 500, 270
@@ -28,7 +30,7 @@ main_check = False
 
 class ButtonPair(GridLayout):
     pass
-    
+
 class TextBoxAndField(GridLayout):
     pass
 
@@ -40,20 +42,20 @@ class InputScreen(Screen):
     def _okay(self):
         global client, manager, sock, main_check
 
-        self.ids["err_box"].text = ""
+        self.ids['err_box'].text = ''
 
-        address = self.ids["addr_box"].ids["box_val"].text
-        port = self.ids["port_box"].ids["box_val"].text
-        username = self.ids["username_box"].ids["box_val"].text
-        password = self.ids["password_box"].ids["box_val"].text
+        address = self.ids['addr_box'].ids['box_val'].text
+        port = self.ids['port_box'].ids['box_val'].text
+        username = self.ids['username_box'].ids['box_val'].text
+        password = self.ids['password_box'].ids['box_val'].text
 
         if not self.sock_conn:
             try:
                 sock.connect((address, int(port)))
                 client = Client(sock)
             except ConnectionRefusedError as msg:
-                self.ids["err_box"].text = "Connection failed: {0}".format(msg)
-                print("Conn fail")
+                self.ids['err_box'].text = 'Connection failed: {0}'.format(msg)
+                print('Conn fail')
                 # Log something probably
                 return
 
@@ -62,10 +64,10 @@ class InputScreen(Screen):
         cont, ret_str = client.check_credentials(password, username)
 
         if not cont:
-            if ret_str == "password":
-                self.ids["err_box"].text = "Password incorrect"
+            if ret_str == 'password':
+                self.ids['err_box'].text = 'Password incorrect'
             else:
-                self.ids["err_box"].text = "Username already in use"
+                self.ids['err_box'].text = 'Username already in use'
             return
 
         manager.next_screen()
@@ -73,9 +75,9 @@ class InputScreen(Screen):
         main_check = True
 
     def _reset(self):
-        self.ids["addr_box"].ids["box_val"].text = "localhost"
-        self.ids["port_box"].ids["box_val"].text = "8090"
-        self.ids["username_box"].ids["box_val"].text = self.ids["password_box"].ids["box_val"].text = ""
+        self.ids['addr_box'].ids['box_val'].text = 'localhost'
+        self.ids['port_box'].ids['box_val'].text = '8090'
+        self.ids['username_box'].ids['box_val'].text = self.ids['password_box'].ids['box_val'].text = ''
 
 class MainScreen(Screen):
     def __init__(self, **kwargs):
@@ -93,37 +95,37 @@ class MainScreen(Screen):
         while not main_check:
             pass
 
-        self.ids["roll_box"].focus = True
+        self.ids['roll_box'].focus = True
 
         while True:
-            self.ids["msg_box"].text += "\n" + client.handle_read() + "\n----------------------------------------------"
+            self.ids['msg_box'].text += '\n' + client.handle_read() + '\n----------------------------------------------'
 
     def _keyboard_closed(self):
-        print("Keyboard lost")
+        print('Keyboard lost')
         # self._keyboard.unbind(on_key_down=self._on_keyboard_down)
-        # self._keyboard = None 
+        # self._keyboard = None
 
     def _on_keyboard_down(self, keyboard, keycode, text, modifiers):
         global main_check, client, sock
 
         if main_check:
             if keycode[1] == 'enter': # :enter
-                message = self.ids["roll_box"].text
+                message = self.ids['roll_box'].text
                 print(message)
-                if re.match(r"^[Qq].*", message):
+                if re.match(r'^[Qq].*', message):
                     self.thr.join()
                     sock.close()
                     Window.close()
                     App.get_running_app.close()
 
-                client.say_roll(self.ids["roll_box"].text)
-                self.ids["roll_box"].text = ""
-                self.ids["roll_box"].focus = True
+                client.say_roll(self.ids['roll_box'].text)
+                self.ids['roll_box'].text = ''
+                self.ids['roll_box'].focus = True
 
 
 class Manager(ScreenManager):
     def next_screen(self):
-        self.current = "main"
+        self.current = 'main'
         Window.size = (co_window_x, co_window_y)
 
 class main_app(App):
@@ -134,9 +136,9 @@ class main_app(App):
         global manager
 
         self.root = Builder.load_file('client_iface.kv')
-        self.title = "Python Dice Roller"
+        self.title = 'Python Dice Roller'
         manager = Manager()
         return manager
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main_app().run()

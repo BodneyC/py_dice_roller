@@ -6,15 +6,14 @@
     rows: 1
     orientation: 'horizontal'
     Label:
-        source: "images/Label"
         size_hint_x: .2
         text: root.name
     TextInput:
         id: box_val
         size_hint_x: .5
         text: root.value
-        background_normal: "./images/normal.png"
-        background_active: "./images/active.png"
+        background_normal: './images/normal.png'
+        background_active: './images/active.png'
         multiline: False
         password: root.pswd
         height: 40
@@ -29,24 +28,24 @@
         padding: app.in_window_x * .05
         TextBoxAndField:
             id: addr_box
-            name: "Address:"
-            value: "localhost"
+            name: 'Address:'
+            value: 'localhost'
         TextBoxAndField:
             id: port_box
-            name: "Port:"
-            value: "8090"
+            name: 'Port:'
+            value: '8090'
         TextBoxAndField:
             id: username_box
-            name: "Username:"
-            value: "b"
+            name: 'Username:'
+            value: 'b'
         TextBoxAndField:
             id: password_box
-            name: "Password:"
-            value: "fish"
+            name: 'Password:'
+            value: 'fish'
             pswd: True
         Label:
             id: err_box
-            text: ""
+            text: ''
         ButtonPair:
             cols: 2
             orientation: 'horizontal'
@@ -54,13 +53,14 @@
             Button:
                 background_color: (.78, .62, .84, 1)
                 id: reset_button
-                text: "Reset"
+                text: 'Reset'
                 on_release: root._reset()
             Button:
                 background_color: (.78, .62, .84, 1)
                 id: okay_button
-                text: "Okay"
+                text: 'Okay'
                 on_release: root._okay()
+
 
 <MainScreen>:
     GridLayout:
@@ -69,9 +69,9 @@
         padding: app.co_window_x * .05
         TextInput:
             id: msg_box
-            background_disabled_normal: "./images/active.png"
+            background_disabled_normal: './images/active.png'
             disabled: True
-            text: "Welcome...\n--------------------------------------------------"
+            text: 'Welcome...\n--------------------------------------------------'
             # content_height: app.co_window_y * .48
         GridLayout:
             size_hint_y: .1
@@ -79,10 +79,10 @@
             cols: 2
             Label:
                 size_hint_x: .2
-                text: "Message:"
+                text: 'Message:'
             TextInput:
-                background_normal: "./images/normal.png"
-                background_active: "./images/active.png"
+                background_normal: './images/normal.png'
+                background_active: './images/active.png'
                 background_disabled_normal: ''
                 id: roll_box
                 multiline: False
@@ -91,8 +91,8 @@
 <Manager>:
     # InputScreen first but Main atm for testing
     InputScreen:
-        name: "input"
-        title: "Welcome..."
+        name: 'input'
+        title: 'Welcome...'
     MainScreen:
-        name: "main"
-        title: "Pray to RNG..."
+        name: 'main'
+        title: 'Pray to RNG...'
