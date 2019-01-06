@@ -8,11 +8,14 @@ import threading
 from client_code import Client
 
 from kivy.app import App
+from kivy.atlas import Atlas
 from kivy.lang import Builder
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.screenmanager import ScreenManager, Screen
 from kivy.uix.popup import Popup
 from kivy.core.window import Window
+
+Window.clearcolor = (.66, .38, .78, 1)
 
 in_window_x, in_window_y = 500, 270
 co_window_x, co_window_y = 1000, 800
@@ -47,6 +50,7 @@ class InputScreen(Screen):
         if not self.sock_conn:
             try:
                 sock.connect((address, int(port)))
+                client = Client(sock)
             except ConnectionRefusedError as msg:
                 self.ids["err_box"].text = "Connection failed: {0}".format(msg)
                 print("Conn fail")
@@ -55,9 +59,13 @@ class InputScreen(Screen):
 
         self.sock_conn = True
 
-        client = Client(sock)
+        cont, ret_str = client.check_credentials(password, username)
 
-        if not client.check_credentials(password, username):
+        if not cont:
+            if ret_str == "password":
+                self.ids["err_box"].text = "Password incorrect"
+            else:
+                self.ids["err_box"].text = "Username already in use"
             return
 
         manager.next_screen()
@@ -84,6 +92,8 @@ class MainScreen(Screen):
 
         while not main_check:
             pass
+
+        self.ids["roll_box"].focus = True
 
         while True:
             self.ids["msg_box"].text += "\n" + client.handle_read() + "\n----------------------------------------------"
@@ -121,9 +131,10 @@ class main_app(App):
     co_window_x, co_window_y = co_window_x, co_window_y
 
     def build(self):
+        global manager
+
         self.root = Builder.load_file('client_iface.kv')
         self.title = "Python Dice Roller"
-        global manager
         manager = Manager()
         return manager
 

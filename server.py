@@ -44,8 +44,9 @@ class Server:
                 conn, addr = self.sock.accept()
             except socket.timeout:
                 continue
-            tmpThr = Thread(target = self.handle_accept(conn, addr))
+            tmpThr = Thread(target = self.handle_accept, args=[conn, addr])
             tmpThr.daemon = True
+            print("CON X")
             tmpThr.start()
             thr_pool.append(tmpThr)
             # Check for dead conns
@@ -84,7 +85,6 @@ class Server:
             roll_info = dice_roll(line[5:])
 
             if roll_info.startswith("Invalid"):
-                self.log.info("ROLL: {1}, {0}".format(line[5:], roll_info))
                 try:
                     rclient.get_conn().sendall(roll_info.encode())
                 except BrokenPipeError as e:
@@ -103,14 +103,17 @@ class Server:
         if client_message.startswith("PSWD:"):
             pswd_succ = int(client_message[5:] == self.password)
             if pswd_succ:
-                self.log.info("Connection {0} gave correct password".format(conn))
+                self.log.info("Connection {0}: Password accepted".format(conn))
             conn.sendall(str(pswd_succ).encode())
             return pswd_succ
 
         if client_message.startswith("USER:"):
             username = client_message[5:]
             if username in self.remote_clients.keys():
+                conn.sendall("0".encode())
+                self.log.warn("Connection {0}: Username not accepted".format(conn))
                 return False
+            self.log.info("Connection {0}: Username accepted".format(conn))
             self.remote_clients[username] = RClient(username, conn, self)
             conn.sendall("1".encode())
             return True

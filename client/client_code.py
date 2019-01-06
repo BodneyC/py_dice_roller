@@ -19,16 +19,16 @@ class Client:
         self.say("PSWD:" + password)
         # print(self.sock.recv(BUF_SIZE))
         if not int(self.sock.recv(BUF_SIZE).decode()):
-            return False
+            return False, "password"
 
         self.say("USER:" + username)
         # print(self.sock.recv(BUF_SIZE))
         if not int(self.sock.recv(BUF_SIZE).decode()):
-            return False
+            return False, "username"
 
         self.say(username)
 
-        return True
+        return True, ""
 
     def say_roll(self, message):
         self.say("ROLL:" + message)
