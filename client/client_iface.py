@@ -193,12 +193,13 @@ def quit():
     App.get_running_app.close()
     sys.exit(0)
 
-def resourcePath():
+def resourcePath(path):
     if hasattr(sys, '_MEIPASS'):
         return os.path.join(sys._MEIPASS)
 
-    return os.path.join(os.path.abspath("."))
+    return os.path.join(os.path.abspath(path))
 
 if __name__ == '__main__':
-    kivy.resources.resource_add_path(resourcePath())
+    kivy.resources.resource_add_path(resourcePath('.'))
+    kivy.resources.resource_add_path(resourcePath('./images'))
     main_app().run()

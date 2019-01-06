@@ -1,18 +1,15 @@
 # -*- mode: python -*-
 
-# HAD TO ADD sdl2/bin TO PATH
-
 from kivy.deps import sdl2, glew
 
 block_cipher = None
 
 
-a = Analysis(['..\\client_iface.py'],
-             pathex=['specpath',
-			 '.\\images'],
+a = Analysis(['client_iface.py'],
+             pathex=['D:\\Users\\BenJC\\Documents\\2_Projects\\py_dice_roller\\client'],
              binaries=[],
              datas=[],
-             hiddenimports=['images'],
+             hiddenimports=[],
              hookspath=[],
              runtime_hooks=[],
              excludes=[],
@@ -20,9 +17,13 @@ a = Analysis(['..\\client_iface.py'],
              win_private_assemblies=False,
              cipher=block_cipher,
              noarchive=False)
+a.datas += [('client_iface.kv', '.\\client_iface.kv', 'DATA'), 
+            ('active.png', '.\\images\\active.png', 'DATA'),
+            ('back.png', '.\\images\\active.png', 'DATA'),
+            ('normal.png', '.\\images\\active.png', 'DATA')
+]
 pyz = PYZ(a.pure, a.zipped_data,
              cipher=block_cipher)
-a.datas += [('client_iface.kv', '.\\client_iface.kv', 'DATA')]
 exe = EXE(pyz,
           a.scripts,
           a.binaries,
