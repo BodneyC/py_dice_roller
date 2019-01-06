@@ -1,12 +1,13 @@
 #!/usr/bin/python
 
 import re
-import sys
+import sys, os
 import time
 import socket
 import threading
 from client_code import Client
 
+from kivy.resources import kivy
 from kivy.app import App
 from kivy.atlas import Atlas
 from kivy.lang import Builder
@@ -15,6 +16,8 @@ from kivy.uix.screenmanager import ScreenManager, Screen
 from kivy.uix.popup import Popup
 from kivy.core.window import Window
 from kivy.config import Config
+
+kivy.require('1.10.1')
 
 Config.set('input', 'mouse', 'mouse,multitouch_on_demand')
 Window.clearcolor = (.66, .38, .78, 1)
@@ -26,15 +29,6 @@ Window.size = (in_window_x, in_window_y)
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 client = manager = None
 main_check = False
-
-def quit():
-    global client, sock, manager
-    if sock:
-        client.say('quit')
-        sock.close()
-    Window.close()
-    App.get_running_app.close()
-    sys.exit(0)
 
 class ButtonPair(GridLayout):
     pass
@@ -190,5 +184,21 @@ class main_app(App):
         manager = Manager()
         return manager
 
+def quit():
+    global client, sock, manager
+    if client:
+        client.say('quit')
+        sock.close()
+    Window.close()
+    App.get_running_app.close()
+    sys.exit(0)
+
+def resourcePath():
+    if hasattr(sys, '_MEIPASS'):
+        return os.path.join(sys._MEIPASS)
+
+    return os.path.join(os.path.abspath("."))
+
 if __name__ == '__main__':
+    kivy.resources.resource_add_path(resourcePath())
     main_app().run()
