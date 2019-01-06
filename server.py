@@ -77,7 +77,7 @@ class Server:
         while True:
             try:
                 line = rclient.conn.recv(BUF_SIZE).decode()
-            except (BrokenPipeError, socket.timeout) as e:
+            except (BrokenPipeError, socket.timeout, ConnectionResetError) as e:
                 self.log.warn(e)
                 del self.remote_clients[rclient.username]
                 return

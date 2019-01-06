@@ -11,6 +11,12 @@ This repo is near-identical to [my other one](https://github.com/BodneyC/ruby_di
 
 I originally wanted to make it in Ruby but the TUI libraries are sparse andthe only one I can get working fairly well has little to no Windows support (which is where team-mates will be wanting to use it).
 
+### Dependencies
+
+All but `./client/client_iface.*` are pure Python (3.7) and have no other dependencies.
+
+The client interface however is a GUI build with [Kivy](https://kivy.org/#home).
+
 ### Usage
 
 Usage currently changes with the two types of program bullet-pointed above:

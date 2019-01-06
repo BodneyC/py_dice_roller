@@ -14,7 +14,7 @@ def roll_dice(die_num = 0, sides = 0):
     vals = []
 
     for i in range(0, die_num):
-        vals.append(random.randint(0, sides))
+        vals.append(random.randint(1, sides))
         total += vals[-1]
 
     return total, vals

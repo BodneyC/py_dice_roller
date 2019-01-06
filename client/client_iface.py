@@ -54,6 +54,8 @@ class InputScreen(Screen):
         super(InputScreen, self).__init__(**kwargs)
         self.sock_conn = False
         self.window_x, self.window_y = in_window_x, in_window_y
+        self._keyboard = Window.request_keyboard(self._keyboard_closed, self)
+        self._keyboard.bind(on_key_down = self._on_keyboard_down)
 
     def _okay(self):
         global client, manager, sock, main_check
@@ -88,6 +90,8 @@ class InputScreen(Screen):
 
         manager.next_screen()
 
+        self._keyboard.unbind(on_key_down=self._on_keyboard_down)
+        self._keyboard = None
         main_check = True
 
     def _reset(self):
@@ -95,12 +99,23 @@ class InputScreen(Screen):
         self.ids['port_box'].ids['box_val'].text = '8090'
         self.ids['username_box'].ids['box_val'].text = self.ids['password_box'].ids['box_val'].text = ''
 
+    def _keyboard_closed(self):
+        print('Keyboard lost')
+        # self._keyboard.unbind(on_key_down=self._on_keyboard_down)
+        # self._keyboard = None
+
+    def _on_keyboard_down(self, keyboard, keycode, text, modifiers):
+        print(keycode, text, modifiers)
+
+        if keycode[1] == 'enter':
+            self._okay()
+        
+
 class MainScreen(Screen):
     def __init__(self, **kwargs):
         super(MainScreen, self).__init__(**kwargs)
         self.window_x, self.window_y = co_window_x, co_window_y
-        self._keyboard = Window.request_keyboard(self._keyboard_closed, self)
-        self._keyboard.bind(on_key_down = self._on_keyboard_down)
+        self._keyboard = None
 
         self.thr = threading.Thread(target = self.read_loop)
         self.thr.daemon = True
@@ -110,7 +125,10 @@ class MainScreen(Screen):
         global client, main_check
 
         while not main_check:
-            pass
+            time.sleep(1)
+
+        self._keyboard = Window.request_keyboard(self._keyboard_closed, self)
+        self._keyboard.bind(on_key_down = self._on_keyboard_down)
 
         self.ids['roll_box'].focus = True
 
@@ -139,20 +157,21 @@ class MainScreen(Screen):
     def _on_keyboard_down(self, keyboard, keycode, text, modifiers):
         global main_check, client
 
-        if main_check:
-            if self.ids['msg_box'].focus:
-                self.ids['roll_box'].focus = True
+        print(keycode, text, modifiers)
 
-            if keycode[1] == 'enter': # :enter
-                message = self.ids['roll_box'].text
-                print(message)
-                if re.match(r'^[Qq].*', message):
-                    self.thr.join()
-                    quit()
+        if self.ids['msg_box'].focus:
+            self.ids['roll_box'].focus = True
 
-                client.say_roll(self.ids['roll_box'].text)
-                self.ids['roll_box'].text = ''
-                self.ids['roll_box'].focus = True
+        if keycode[1] == 'enter': # :enter
+            message = self.ids['roll_box'].text
+            print(message)
+            if re.match(r'^[Qq].*', message):
+                self.thr.join()
+                quit()
+
+            client.say_roll(self.ids['roll_box'].text)
+            self.ids['roll_box'].text = ''
+            self.ids['roll_box'].focus = True
 
 class Manager(ScreenManager):
     def next_screen(self):
