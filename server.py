@@ -81,6 +81,11 @@ class Server:
                 self.log.warn(e)
                 del self.remote_clients[rclient.username]
                 return
+            
+            if line.startswith('q') or line.startswith('Q'):
+                self.log.info('User \'{0}\' left'.format(rclient.username))
+                del self.remote_clients[rclient.username]
+                return
 
             roll_info = dice_roll(line[5:])
 
@@ -92,7 +97,7 @@ class Server:
                     del self.remote_clients[rclient.username]
                     return
             else:
-                put_string = rclient.get_username() + ':\n    ' + line + '\n    ' + roll_info
+                put_string = rclient.get_username() + ':\n    ' + line[5:] + '\n    ' + roll_info
                 self.log.info('Message {0}'.format(put_string))
                 self.broadcast(put_string)
 
@@ -121,7 +126,7 @@ class Server:
         return False
 
     def broadcast(self, message):
-        self.log.info('Broadcasting message: %s', message)
+        self.log.info('Broadcasting message:\n%s', message)
         for rc_username in self.remote_clients:
             if self.remote_clients[rc_username]:
                 self.remote_clients[rc_username].get_conn().sendall(message.encode())
@@ -130,7 +135,7 @@ if __name__ == '__main__':
     socket.setdefaulttimeout(100)
     logging.basicConfig(level = logging.INFO)
 
-    sock_addr, sock_port, password = 'localhost', 8090, 'fish'
+    sock_addr, sock_port, password = 'localhost', 8090, ''
 
     show_help = 'Usage\n\t./server.rb [<address> <port> [<password]]'
 

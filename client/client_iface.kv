@@ -18,14 +18,15 @@
         password: root.pswd
         height: 40
 
-<InputScreen>:
+<InputScreen@Screen>:
+
     GridLayout:
+        size_hint: None, None
+        size: (root.window_x * .8, root.window_y * .8)
+        pos_hint: { 'x': ((root.size[0] / 2) - (self.size[0] / 2)) / root.size[0], 'y': ((root.size[1] / 2) - (self.size[1] / 2)) / root.size[1] }
         orientation: 'vertical'
         cols: 1
         rows: 6
-        size_hint: .8, .8
-        pos_hint: { 'y': .1, 'x': .1 }
-        padding: app.in_window_x * .05
         TextBoxAndField:
             id: addr_box
             name: 'Address:'
@@ -37,11 +38,11 @@
         TextBoxAndField:
             id: username_box
             name: 'Username:'
-            value: 'b'
+            value: ''
         TextBoxAndField:
             id: password_box
             name: 'Password:'
-            value: 'fish'
+            value: ''
             pswd: True
         Label:
             id: err_box
@@ -61,18 +62,66 @@
                 text: 'Okay'
                 on_release: root._okay()
 
-
-<MainScreen>:
+<UpDownBox@GridLayout>:
+    text: 'default'
+    rows: 2
+    cols: 2
+    TextInput:
+        background_normal: './images/normal.png'
+        background_active: './images/active.png'
+        id: box_val
+        text: root.text
+        height: 40
     GridLayout:
+        size_hint_x: .3
         cols: 1
         rows: 2
-        padding: app.co_window_x * .05
+        Button:
+            background_color: (.78, .62, .84, 1)
+            id: up
+            text: '+1'
+            on_release: root._up()
+        Button:
+            background_color: (.78, .62, .84, 1)
+            id: down
+            text: '-1'
+            on_release: root._down()
+
+<MainScreen@Screen>:
+    GridLayout:
+        cols: 1
+        rows: 3
+        padding: root.window_x * .05
         TextInput:
             id: msg_box
-            background_disabled_normal: './images/active.png'
-            disabled: True
+            background_normal: './images/active.png'
+            background_active: './images/active.png'
+            # disabled: True
             text: 'Welcome...\n--------------------------------------------------'
             # content_height: app.co_window_y * .48
+        GridLayout:
+            size_hint_y: .1
+            rows: 1
+            cols: 6
+            UpDownBox:
+                id: n_dice
+                text: "1"
+            Label:
+                text: "d"
+            UpDownBox:
+                id: n_sides
+                text: "20"
+            Label:
+                text: "mods:"
+            UpDownBox:
+                id: mods
+                text: "0"
+            Button:
+                id: submit
+                size_hint_x: 2
+                background_color: (.78, .62, .84, 1)
+                text: 'Submit'
+                on_release: root._submit()
         GridLayout:
             size_hint_y: .1
             rows: 1
@@ -81,14 +130,14 @@
                 size_hint_x: .2
                 text: 'Message:'
             TextInput:
+                id: roll_box
                 background_normal: './images/normal.png'
                 background_active: './images/active.png'
                 background_disabled_normal: ''
-                id: roll_box
                 multiline: False
                 height: 40
 
-<Manager>:
+<Manager@ScreenManager>:
     # InputScreen first but Main atm for testing
     InputScreen:
         name: 'input'
