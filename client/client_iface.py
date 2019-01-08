@@ -176,7 +176,7 @@ class Manager(ScreenManager):
 
 class main_app(App):
     def on_stop(self):
-        quit()
+        quit_app()
 
     def build(self):
         global manager
@@ -186,7 +186,7 @@ class main_app(App):
         manager = Manager()
         return manager
 
-def quit():
+def quit_app():
     global client, sock, manager
     if client:
         client.say('quit')
