@@ -20,9 +20,9 @@ from kivy.config import Config
 kivy.require('1.10.1')
 
 Config.set('input', 'mouse', 'mouse,multitouch_on_demand')
-Window.clearcolor = (.66, .38, .78, 1)
+Window.clearcolor = (.27, .29, .3, 1)
 
-in_window_x, in_window_y = 500, 270
+in_window_x, in_window_y = 550, 270
 co_window_x, co_window_y = 1000, 800
 Window.size = (in_window_x, in_window_y)
 
@@ -66,12 +66,16 @@ class InputScreen(Screen):
                 sock.connect((address, int(port)))
                 client = Client(sock)
             except ConnectionRefusedError as msg:
-                self.ids['err_box'].text = 'Connection failed: {0}'.format(msg)
-                print('Conn fail')
+                self.ids['err_box'].text = 'Connection failed: Server refused'
+                print('Connection failed: {0}'.format(msg))
                 # Log something probably
                 return
 
         self.sock_conn = True
+
+        if username == '':
+            self.ids['err_box'].text = 'Please provide a username'
+            return
 
         cont, ret_str = client.check_credentials(password, username)
 
@@ -94,13 +98,9 @@ class InputScreen(Screen):
         self.ids['username_box'].ids['box_val'].text = self.ids['password_box'].ids['box_val'].text = ''
 
     def _keyboard_closed(self):
-        print('Keyboard lost')
-        # self._keyboard.unbind(on_key_down=self._on_keyboard_down)
-        # self._keyboard = None
+        pass
 
     def _on_keyboard_down(self, keyboard, keycode, text, modifiers):
-        print(keycode, text, modifiers)
-
         if keycode[1] == 'enter':
             self._okay()
         
@@ -130,6 +130,10 @@ class MainScreen(Screen):
             self.ids['msg_box'].text += '\n' + client.handle_read() + '\n----------------------------------------------'
 
     def _submit(self):
+        if self.ids['roll_box'].text != '':
+            self.text_roll()
+            return
+
         roll_string = self.ids['n_dice'].ids['box_val'].text + 'd' + self.ids['n_sides'].ids['box_val'].text
         mods = self.ids['mods'].ids['box_val'].text
         if not mods.startswith('-'):
@@ -144,28 +148,27 @@ class MainScreen(Screen):
         
 
     def _keyboard_closed(self):
-        print('Keyboard lost')
-        # self._keyboard.unbind(on_key_down=self._on_keyboard_down)
-        # self._keyboard = None
+        pass
 
     def _on_keyboard_down(self, keyboard, keycode, text, modifiers):
-        global main_check, client
-
-        print(keycode, text, modifiers)
-
         if self.ids['msg_box'].focus:
             self.ids['roll_box'].focus = True
 
         if keycode[1] == 'enter': # :enter
-            message = self.ids['roll_box'].text
-            print(message)
-            if re.match(r'^[Qq].*', message):
-                self.thr.join()
-                quit()
+            self.text_roll()
 
-            client.say_roll(self.ids['roll_box'].text)
-            self.ids['roll_box'].text = ''
-            self.ids['roll_box'].focus = True
+    def text_roll(self):
+        global client
+
+        message = self.ids['roll_box'].text
+        print(message)
+        if re.match(r'^[Qq].*', message):
+            self.thr.join()
+            quit()
+
+        client.say_roll(self.ids['roll_box'].text)
+        self.ids['roll_box'].focus = True
+
 
 class Manager(ScreenManager):
     def next_screen(self):
@@ -202,4 +205,5 @@ def resourcePath(path):
 if __name__ == '__main__':
     kivy.resources.resource_add_path(resourcePath('.'))
     kivy.resources.resource_add_path(resourcePath('./images'))
+    kivy.resources.resource_add_path(resourcePath('./fonts'))
     main_app().run()

@@ -20,7 +20,8 @@ a = Analysis(['client_iface.py'],
 a.datas += [('client_iface.kv', '.\\client_iface.kv', 'DATA'), 
             ('active.png', '.\\images\\active.png', 'DATA'),
             ('back.png', '.\\images\\active.png', 'DATA'),
-            ('normal.png', '.\\images\\active.png', 'DATA')
+            ('normal.png', '.\\images\\active.png', 'DATA'),
+            ('DroidSansMono.ttf', '.\\fonts\\DroidSansMono.ttf', 'DATA')
 ]
 pyz = PYZ(a.pure, a.zipped_data,
              cipher=block_cipher)
@@ -36,7 +37,9 @@ exe = EXE(pyz,
           strip=False,
           upx=True,
           runtime_tmpdir=None,
-          console=True )
+          console=False,
+          icon='.\images\icon_dWU_icon.ico',
+)
 coll = COLLECT(exe, Tree('.'),
                a.binaries,
                a.zipfiles,
