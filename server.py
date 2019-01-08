@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-import sys
+import sys, errno
 import socket
 import logging
 from threading import Thread
@@ -64,7 +64,7 @@ class Server:
             try:
                 if self.check_connection(conn) and self.check_connection(conn):
                     break
-            except (BrokenPipeError, socket.timeout) as e:
+            except (socket.error, socket.timeout) as e:
                 conn = None
                 self.log.warn(e)
                 break
@@ -73,11 +73,17 @@ class Server:
             rclient = self.remote_clients[conn.recv(BUF_SIZE).decode()]
             self.begin_rolling(rclient)
 
+    def format_string(self, message):
+        message = message.replace(' ', '')
+        message = message.replace('+', ' + ')
+        message = message.replace('-', ' - ')
+        return message
+
     def begin_rolling(self, rclient):
         while True:
             try:
                 line = rclient.conn.recv(BUF_SIZE).decode()
-            except (BrokenPipeError, socket.timeout, ConnectionResetError) as e:
+            except (socket.error, socket.timeout, ConnectionResetError) as e:
                 self.log.warn(e)
                 del self.remote_clients[rclient.username]
                 return
@@ -88,16 +94,18 @@ class Server:
                 return
 
             roll_info = dice_roll(line[5:])
+            roll_list = self.format_string(line[5:])
+
+            put_string = rclient.get_username() + ':\n    ' + roll_list + '\n    ' + roll_info
 
             if roll_info.startswith('Invalid'):
                 try:
-                    rclient.get_conn().sendall(roll_info.encode())
-                except BrokenPipeError as e:
+                    rclient.get_conn().sendall(put_string)
+                except socket.error as e:
                     self.log.warn(e)
                     del self.remote_clients[rclient.username]
                     return
             else:
-                put_string = rclient.get_username() + ':\n    ' + line[5:] + '\n    ' + roll_info
                 self.log.info('Message {0}'.format(put_string))
                 self.broadcast(put_string)
 
@@ -129,7 +137,11 @@ class Server:
         self.log.info('Broadcasting message:\n%s', message)
         for rc_username in self.remote_clients:
             if self.remote_clients[rc_username]:
-                self.remote_clients[rc_username].get_conn().sendall(message.encode())
+                try:
+                    self.remote_clients[rc_username].get_conn().sendall(message.encode())
+                except IOError as msg:
+                    self.log.warn('User \'{0}\' left unexpectedly\n  {1}'.format(rc_username, msg))
+                    del self.remote_clients[rc_username]
 
 if __name__ == '__main__':
     socket.setdefaulttimeout(100)
