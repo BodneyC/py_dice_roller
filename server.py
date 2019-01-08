@@ -149,13 +149,14 @@ if __name__ == '__main__':
 
     sock_addr, sock_port, password = 'localhost', 8090, ''
 
-    show_help = 'Usage\n\t./server.rb [<address> <port> [<password]]'
+    show_help = 'Usage\n\t./server.rb <address> <port> [<password>]'
 
-    if '-h' in sys.argv or '--help' in sys.argv:
+    argv = sys.argv[1:]
+
+    if '-h' in argv or '--help' in argv or len(argv) == 0:
         print(show_help)
         quit()
 
-    argv = sys.argv[1:]
     if len(argv) >= 2:
         sock_addr, sock_port = argv[0], int(argv[1])
     if len(argv) == 3:
