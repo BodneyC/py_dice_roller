@@ -67,9 +67,10 @@
     rows: 2
     cols: 2
     TextInput:
+        id: box_val
+        font_size: 25
         background_normal: 'normal.png'
         background_active: 'active.png'
-        id: box_val
         text: root.text
         height: 40
     GridLayout:
@@ -131,7 +132,7 @@
         GridLayout:
             size_hint_y: .1
             rows: 1
-            cols: 2
+            cols: 3
             Label:
                 size_hint_x: .2
                 text: 'Message:'
@@ -142,9 +143,15 @@
                 background_disabled_normal: ''
                 multiline: False
                 height: 40
+            Button:
+                id: clear
+                # I'll admit, this is dodgy
+                size_hint_x: .5334
+                background_color: (.13, .14, .14, 1)
+                text: 'Clear'
+                on_release: root._clear_roll_box()
 
 <Manager@ScreenManager>:
-    # InputScreen first but Main atm for testing
     InputScreen:
         name: 'input'
         title: 'Welcome...'

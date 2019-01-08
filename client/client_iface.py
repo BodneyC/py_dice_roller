@@ -146,6 +146,8 @@ class MainScreen(Screen):
         self.ids['mods'].ids['box_val'].text = '0'
         self.ids['roll_box'].focus = True
         
+    def _clear_roll_box(self):
+        self.ids['roll_box'].text = ''
 
     def _keyboard_closed(self):
         pass
@@ -162,9 +164,6 @@ class MainScreen(Screen):
 
         message = self.ids['roll_box'].text
         print(message)
-        if re.match(r'^[Qq].*', message):
-            self.thr.join()
-            quit()
 
         client.say_roll(self.ids['roll_box'].text)
         self.ids['roll_box'].focus = True
@@ -193,7 +192,6 @@ def quit():
         client.say('quit')
         sock.close()
     Window.close()
-    App.get_running_app.close()
     sys.exit(0)
 
 def resourcePath(path):
