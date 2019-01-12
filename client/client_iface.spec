@@ -23,8 +23,8 @@ a = Analysis(
 a.datas += [
     ('client_iface.kv', '.\\client_iface.kv', 'DATA'), 
     ('active.png', '.\\images\\active.png', 'DATA'),
-    ('back.png', '.\\images\\active.png', 'DATA'),
-    ('normal.png', '.\\images\\active.png', 'DATA'),
+    ('back.png', '.\\images\\back.png', 'DATA'),
+    ('normal.png', '.\\images\\normal.png', 'DATA'),
     ('DroidSansMono.ttf', '.\\fonts\\DroidSansMono.ttf', 'DATA'),
 ]
 pyz = PYZ(a.pure, a.zipped_data,
