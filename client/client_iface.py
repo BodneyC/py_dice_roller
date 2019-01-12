@@ -103,7 +103,7 @@ class InputScreen(Screen):
     def _on_keyboard_down(self, keyboard, keycode, text, modifiers):
         if keycode[1] == 'enter':
             self._okay()
-        
+
 
 class MainScreen(Screen):
     def __init__(self, **kwargs):
@@ -145,7 +145,7 @@ class MainScreen(Screen):
         self.ids['n_sides'].ids['box_val'].text = '20'
         self.ids['mods'].ids['box_val'].text = '0'
         self.ids['roll_box'].focus = True
-        
+
     def _clear_roll_box(self):
         self.ids['roll_box'].text = ''
 
@@ -204,4 +204,6 @@ if __name__ == '__main__':
     kivy.resources.resource_add_path(resourcePath('.'))
     kivy.resources.resource_add_path(resourcePath('./images'))
     kivy.resources.resource_add_path(resourcePath('./fonts'))
+    # kivy.resources.resource_add_path(resourcePath('D:/Users/BenJC/AppData/Local/Programs/Python/Python36/lib/site-packages'))
+    # kivy.resources.resource_add_path(resourcePath('D:/Users/BenJC/AppData/Local/Programs/Python/Python36/lib/site-packages/core'))
     main_app().run()
