@@ -103,6 +103,8 @@ class InputScreen(Screen):
     def _on_keyboard_down(self, keyboard, keycode, text, modifiers):
         if keycode[1] == 'enter':
             self._okay()
+        
+
 
 
 class MainScreen(Screen):
@@ -110,6 +112,8 @@ class MainScreen(Screen):
         super(MainScreen, self).__init__(**kwargs)
         self.window_x, self.window_y = co_window_x, co_window_y
         self._keyboard = None
+        self.msg_hist = []
+        self.hist_n = 0
 
         self.thr = threading.Thread(target = self.read_loop)
         self.thr.daemon = True
@@ -157,7 +161,28 @@ class MainScreen(Screen):
             self.ids['roll_box'].focus = True
 
         if keycode[1] == 'enter': # :enter
+            self.hist_n = 0
+            self.ids['roll_box'].focus = True
+            self.msg_hist.append(self.ids['roll_box'].text)
             self.text_roll()
+            return
+
+        if self.ids['roll_box'].focus:
+            if modifiers and modifiers[0] == 'ctrl' and keycode[1] == 'backspace':
+                if self.ids['roll_box'].text.__contains__(' '):
+                    self.ids['roll_box'].text = self.ids['roll_box'].text.rsplit(' ', 1)[0]
+                else:
+                    self.ids['roll_box'].text = ''
+            elif keycode[1] == 'up':
+                if len(self.msg_hist) > self.hist_n:
+                    self.hist_n += 1
+                    self.ids['roll_box'].text = self.msg_hist[-self.hist_n]
+            elif keycode[1] == 'down':
+                if self.hist_n != 0:
+                    self.hist_n -= 1
+                    self.ids['roll_box'].text = self.msg_hist[-self.hist_n]
+                else:
+                    self.ids['roll_box'].text = ''
 
     def text_roll(self):
         global client
@@ -167,7 +192,6 @@ class MainScreen(Screen):
 
         client.say_roll(self.ids['roll_box'].text)
         self.ids['roll_box'].focus = True
-
 
 class Manager(ScreenManager):
     def next_screen(self):
