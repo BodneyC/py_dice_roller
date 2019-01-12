@@ -46,7 +46,6 @@ class Server:
                 continue
             tmpThr = Thread(target = self.handle_accept, args=[conn, addr])
             tmpThr.daemon = True
-            print('CON X')
             tmpThr.start()
             thr_pool.append(tmpThr)
             # Check for dead conns
@@ -126,7 +125,7 @@ class Server:
                 conn.sendall('0'.encode())
                 self.log.warn('Connection {0}: Username not accepted'.format(conn))
                 return False
-            self.log.info('Connection {0}: Username accepted'.format(conn))
+            self.log.info('Connection {0}: Username \'{1}\' accepted'.format(conn, username))
             self.remote_clients[username] = RClient(username, conn, self)
             conn.sendall('1'.encode())
             return True
