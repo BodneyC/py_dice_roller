@@ -78,73 +78,6 @@ class Server:
             rclient = self.remote_clients[conn.recv(BUF_SIZE).decode()]
             self.begin_rolling(rclient)
 
-    def format_string(self, message):
-        message = message.replace(' ', '')
-        message = message.replace('+', ' + ')
-        message = message.replace('-', ' - ')
-        return message
-
-    def begin_rolling(self, rclient):
-        while True:
-            try:
-                line = rclient.conn.recv(BUF_SIZE).decode()
-            except (socket.error, socket.timeout, ConnectionResetError) as e:
-                self.log.warn(e)
-                del self.remote_clients[rclient.username]
-                return
-            
-            if line.startswith('q') or line.startswith('Q'):
-                self.log.info('User \'{0}\' left'.format(rclient.username))
-                del self.remote_clients[rclient.username]
-                return
-
-            if line.startswith('ROLL:/'): # Command
-                if line[5:].startswith('/nick'):
-                    rclient.set_nickname(line.split(' ', 1)[1])
-                    
-                elif line[5:].startswith('/pm'):
-                    pm_info = line[5:].split(' ', 2)[1:]
-                    put_string = self.name_string(rclient) + ' (PM)\n    ' + pm_info[1]
-                    if pm_info[0] in self.remote_clients.keys():
-                        try:
-                            self.remote_clients[pm_info[0]].get_conn().sendall(put_string.encode())
-                        except IOError as msg:
-                            self.log.warn('User \'{0}\' unable to recieve, deleting\n  {1}'.format(pm_info[0], msg))
-                            del self.remote_clients[pm_info[0]]
-                            return
-                    else:
-                        try:
-                            rclient.get_conn().sendall('Username \'{0}\' does not exist'.format(pm_info[0]).encode())
-                        except socket.error as e:
-                            self.log.warn(e)
-                            del self.remote_clients[rclient.username]
-                            return
-
-
-                continue
-
-            roll_info = dice_roll(line[5:])
-            roll_list = self.format_string(line[5:])
-
-            put_string = self.name_string(rclient) + '\n    ' + roll_list + '\n    ' + roll_info
-
-            if roll_info.startswith('Invalid'):
-                try:
-                    rclient.get_conn().sendall(put_string.encode())
-                except socket.error as e:
-                    self.log.warn(e)
-                    del self.remote_clients[rclient.username]
-                    return
-            else:
-                self.log.info('Message \'{0}\''.format(put_string))
-                self.broadcast(put_string)
-
-    def name_string(self, rclient):
-        if rclient.username == rclient.nickname:
-            return rclient.username
-        else:
-            return rclient.username + '\'' + rclient.nickname + '\' '
-
     # Errors catch in self.handle_accept()
     def check_connection(self, conn):
         client_message = conn.recv(BUF_SIZE).decode()
@@ -169,16 +102,77 @@ class Server:
 
         return False
 
+    def begin_rolling(self, rclient):
+        while True:
+            try:
+                line = rclient.conn.recv(BUF_SIZE).decode()
+            except (socket.error, socket.timeout, ConnectionResetError) as e:
+                self.log.warn(e)
+                del self.remote_clients[rclient.username]
+                return
+            
+            if line.startswith('q') or line.startswith('Q'):
+                self.log.info('User \'{0}\' left'.format(rclient.username))
+                del self.remote_clients[rclient.username]
+                return
+
+            if line.startswith('ROLL:/'): # Command
+                if line[5:].startswith('/nick'):
+                    rclient.set_nickname(line.split(' ', 1)[1])
+                    
+                elif line[5:].startswith('/pm'):
+                    pm_info = line[5:].split(' ', 2)[1:]
+                    put_string = self._name_string(rclient) + ' (PM)\n    ' + pm_info[1]
+                    if pm_info[0] in self.remote_clients.keys():
+                        self.send_one(pm_info[0], put_string)
+                    else:
+                        self.send_one(rclient.username, 'Username \'{0}\' does not exist'.format(pm_info[0]))
+
+                continue
+
+            roll_info = dice_roll(line[5:])
+            roll_list = self.format_string(line[5:])
+
+            put_string = self._name_string(rclient) + '\n    ' + roll_list + '\n    ' + roll_info
+
+            if roll_info.startswith('Invalid'):
+                try:
+                    rclient.get_conn().sendall(put_string.encode())
+                except socket.error as e:
+                    self.log.warn(e)
+                    del self.remote_clients[rclient.username]
+                    return
+            else:
+                self.log.info('Message\n\'{0}\''.format(put_string))
+                self.broadcast(put_string)
+
+    def _name_string(self, rclient):
+        if rclient.username == rclient.nickname:
+            return rclient.username
+        else:
+            return rclient.username + ' \'' + rclient.nickname + '\' '
+
+    def format_string(self, message):
+        message = message.replace(' ', '')
+        message = message.replace('+', ' + ')
+        message = message.replace('-', ' - ')
+        return message
+
+    def send_one(self, username, message):
+        try:
+            self.remote_clients[username].get_conn().sendall(message.encode())
+        except (IOError, socket.error) as msg:
+            self.log.warn('User \'{0}\' unable to recieve, deleting\n {1}'.format(username, msg))
+            del self.remote_clients[username]
+            return False
+        return True
+
     def broadcast(self, message):
         self.log.info('Broadcasting message:\n%s', message)
         for rc_username in self.remote_clients:
             print("Broadacsting")
             if self.remote_clients[rc_username]:
-                try:
-                    self.remote_clients[rc_username].get_conn().sendall(message.encode())
-                except IOError as msg:
-                    self.log.warn('User \'{0}\' left unexpectedly\n  {1}'.format(rc_username, msg))
-                    del self.remote_clients[rc_username]
+                self.send_one(rc_username, message)
 
 if __name__ == '__main__':
     logging.basicConfig(level = logging.INFO)

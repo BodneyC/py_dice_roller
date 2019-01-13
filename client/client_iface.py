@@ -1,6 +1,5 @@
 #!/usr/bin/python
 
-import re
 import sys, os
 import time
 import socket
@@ -104,9 +103,6 @@ class InputScreen(Screen):
     def _on_keyboard_down(self, keyboard, keycode, text, modifiers):
         if keycode[1] == 'enter':
             self._okay()
-        
-
-
 
 class MainScreen(Screen):
     def __init__(self, **kwargs):
@@ -138,7 +134,7 @@ class MainScreen(Screen):
 
     def _submit(self):
         if self.ids['roll_box'].text != '':
-            self.text_roll()
+            self.text_roll('roll_box')
             return
 
         roll_string = self.ids['n_dice'].ids['box_val'].text + 'd' + self.ids['n_sides'].ids['box_val'].text
@@ -167,7 +163,7 @@ class MainScreen(Screen):
             self.hist_n = 0
             self.ids['roll_box'].focus = True
             self.msg_hist.append(self.ids['roll_box'].text)
-            self.text_roll()
+            self.text_roll('roll_box')
             return
 
         if self.ids['roll_box'].focus:
@@ -186,18 +182,55 @@ class MainScreen(Screen):
                     self.ids['roll_box'].text = self.msg_hist[-self.hist_n]
                 else:
                     self.ids['roll_box'].text = ''
+    
+    # Couldn't think of a way to DRY these up
+    def _preset_1(self):
+        if self.ids['edit_switch'].active:
+            self.ids['preset_1'].text = self.ids['roll_box'].text
+        else:
+            if self.ids['preset_1'].text != '':
+                self.text_roll('preset_1')
 
-    def text_roll(self):
+    def _preset_2(self):
+        if self.ids['edit_switch'].active:
+            self.ids['preset_2'].text = self.ids['roll_box'].text
+        else:
+            if self.ids['preset_2'].text != '':
+                self.text_roll('preset_2')
+
+    def _preset_3(self):
+        if self.ids['edit_switch'].active:
+            self.ids['preset_3'].text = self.ids['roll_box'].text
+        else:
+            if self.ids['preset_3'].text != '':
+                self.text_roll('preset_3')
+
+    def _preset_4(self):
+        if self.ids['edit_switch'].active:
+            self.ids['preset_4'].text = self.ids['roll_box'].text
+        else:
+            if self.ids['preset_4'].text != '':
+                self.text_roll('preset_4')
+
+    def _preset_5(self):
+        if self.ids['edit_switch'].active:
+            self.ids['preset_5'].text = self.ids['roll_box'].text
+        else:
+            if self.ids['preset_5'].text != '':
+                self.text_roll('preset_5')
+
+    def text_roll(self, box_id):
         global client
 
-        message = self.ids['roll_box'].text
-        print(message)
+        message = self.ids[box_id].text
 
         if message[0] == 'd':
             message = '1' + message
 
-        client.say_roll(self.ids['roll_box'].text)
-        self.ids['roll_box'].focus = True
+        print('MSG: ' + message)
+
+        client.say_roll(message)
+        self.ids[box_id].focus = True
 
 class Manager(ScreenManager):
     def next_screen(self):

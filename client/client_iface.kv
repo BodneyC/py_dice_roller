@@ -94,14 +94,48 @@
         cols: 1
         rows: 3
         padding: root.window_x * .05
-        TextInput:
-            id: msg_box
-            font_name: 'DroidSansMono.ttf'
-            background_normal: 'active.png'
-            background_active: 'active.png'
-            # disabled: True
-            text: 'Welcome...\n--------------------------------------------------'
-            # content_height: app.co_window_y * .48
+        GridLayout:
+            rows: 1
+            cols: 2
+            TextInput:
+                id: msg_box
+                font_name: 'DroidSansMono.ttf'
+                background_normal: 'active.png'
+                background_active: 'active.png'
+                # disabled: True
+                text: 'Welcome...\n--------------------------------------------------'
+                # content_height: app.co_window_y * .48
+            GridLayout:
+                rows: 7
+                cols: 1
+                size_hint_x: .18
+                Label:
+                    size_hint_y: .3
+                    text: 'Edit switch:'
+                Switch:
+                    id: edit_switch
+                    size_hint_y: .6
+                    active: False
+                Button:
+                    id: preset_1
+                    text: '1d20 + 0'
+                    on_release: root._preset_1()
+                Button:
+                    id: preset_2
+                    text: '1d20 + 0'
+                    on_release: root._preset_2()
+                Button:
+                    id: preset_3
+                    text: '1d20 + 0'
+                    on_release: root._preset_3()
+                Button:
+                    id: preset_4
+                    text: '1d20 + 0'
+                    on_release: root._preset_4()
+                Button:
+                    id: preset_5
+                    text: '1d20 + 0'
+                    on_release: root._preset_5()
         GridLayout:
             size_hint_y: .1
             rows: 1
