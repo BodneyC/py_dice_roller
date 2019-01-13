@@ -3,3 +3,5 @@ client/__pycache__
 build
 dist
 *.pyc
+server_logs/*
+!server_logs/.keep

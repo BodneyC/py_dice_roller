@@ -3,6 +3,7 @@
 import sys, errno
 import socket
 import logging
+import datetime
 from threading import Thread
 
 from dice_roller import roll as dice_roll
@@ -19,9 +20,6 @@ class RClient:
     def set_nickname(self, nickname):
         self.nickname = nickname
 
-    def get_nickname(self):
-        return self.nickname
-
     def get_conn(self):
         return self.conn
 
@@ -29,7 +27,7 @@ class Server:
     log = logging.getLogger('Server')
 
     def __init__(self, address = ('localhost', 8090), password = 'fish'):
-        self.log.info(' Server started on: {0}\n     Password is: {1}'.format(address, password))
+        self.log.info('Server started on: {0}\n     Password is: {1}'.format(address, password))
 
         self.password = password
         self.remote_clients = {}
@@ -119,12 +117,17 @@ class Server:
             if line.startswith('ROLL:/'): # Command
                 if line[5:].startswith('/nick'):
                     rclient.set_nickname(line.split(' ', 1)[1])
+                    put_string = 'Nickname chaged to \'' + rclient.nickname + '\''
+                    self.send_one(rclient.username, put_string)
                     
                 elif line[5:].startswith('/pm'):
                     pm_info = line[5:].split(' ', 2)[1:]
                     put_string = self._name_string(rclient) + ' (PM)\n    ' + pm_info[1]
                     if pm_info[0] in self.remote_clients.keys():
-                        if not self.send_one(pm_info[0], put_string):
+                        if self.send_one(pm_info[0], put_string):
+                            put_string = 'Message sent to \'' + pm_info[0] + '\''
+                            self.send_one(rclient.username, put_string)
+                        else:
                             self.send_one(rclient.username, 'Username \'{0}\' failed to recieve message'.format(pm_info[0]))
                     else:
                         self.send_one(rclient.username, 'Username \'{0}\' does not exist'.format(pm_info[0]))
@@ -176,7 +179,10 @@ class Server:
                 self.send_one(rc_username, message)
 
 if __name__ == '__main__':
-    logging.basicConfig(level = logging.INFO)
+    log_file = './server_logs/' + datetime.datetime.now().strftime("%I:%M%p-%y-%m-%d") + '.log'
+    logging.FileHandler(log_file, mode = 'a', encoding = None, delay = False)
+    logging.basicConfig(filename = log_file, level = logging.INFO)
+    logging.getLogger().addHandler(logging.StreamHandler())
 
     sock_addr, sock_port, password = 'localhost', 8090, ''
 
