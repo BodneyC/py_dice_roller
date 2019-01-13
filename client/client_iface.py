@@ -190,6 +190,9 @@ class MainScreen(Screen):
         message = self.ids['roll_box'].text
         print(message)
 
+        if message[0] == 'd':
+            message = '1' + message
+
         client.say_roll(self.ids['roll_box'].text)
         self.ids['roll_box'].focus = True
 

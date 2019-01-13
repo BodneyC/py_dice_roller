@@ -12,11 +12,15 @@ BUF_SIZE = 1024
 class RClient:
     def __init__(self, username, conn, host):
         self.username = username
+        self.nickname = username
         self.conn = conn
         self.host = host
 
-    def get_username(self):
-        return self.username
+    def set_nickname(self, nickname):
+        self.nickname = nickname
+
+    def get_nickname(self):
+        return self.nickname
 
     def get_conn(self):
         return self.conn
@@ -92,20 +96,27 @@ class Server:
                 del self.remote_clients[rclient.username]
                 return
 
+            if line.startswith('ROLL:/'): # Command
+                if line[5:].startswith('/nick'):
+                    rclient.set_nickname(line.split(' ', 1)[1])
+                    
+
+                return
+
             roll_info = dice_roll(line[5:])
             roll_list = self.format_string(line[5:])
 
-            put_string = rclient.get_username() + ':\n    ' + roll_list + '\n    ' + roll_info
+            put_string = rclient.username + ' \'' + rclient.nickname + '\'' + ':\n    ' + roll_list + '\n    ' + roll_info
 
             if roll_info.startswith('Invalid'):
                 try:
-                    rclient.get_conn().sendall(put_string)
+                    rclient.get_conn().sendall(put_string.encode())
                 except socket.error as e:
                     self.log.warn(e)
                     del self.remote_clients[rclient.username]
                     return
             else:
-                self.log.info('Message {0}'.format(put_string))
+                self.log.info('Message \'{0}\''.format(put_string))
                 self.broadcast(put_string)
 
     # Errors catch in self.handle_accept()
