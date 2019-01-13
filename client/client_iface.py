@@ -50,6 +50,7 @@ class InputScreen(Screen):
         self.window_x, self.window_y = in_window_x, in_window_y
         self._keyboard = Window.request_keyboard(self._keyboard_closed, self)
         self._keyboard.bind(on_key_down = self._on_keyboard_down)
+        self.ids['addr_box'].ids['box_val'].focus = True
 
     def _okay(self):
         global client, manager, sock, main_check
@@ -68,6 +69,7 @@ class InputScreen(Screen):
             except ConnectionRefusedError as msg:
                 self.ids['err_box'].text = 'Connection failed: Server refused'
                 print('Connection failed: {0}'.format(msg))
+                self.ids['addr_box'].ids['box_val'].focus = True
                 # Log something probably
                 return
 

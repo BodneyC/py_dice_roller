@@ -124,7 +124,8 @@ class Server:
                     pm_info = line[5:].split(' ', 2)[1:]
                     put_string = self._name_string(rclient) + ' (PM)\n    ' + pm_info[1]
                     if pm_info[0] in self.remote_clients.keys():
-                        self.send_one(pm_info[0], put_string)
+                        if not self.send_one(pm_info[0], put_string):
+                            self.send_one(rclient.username, 'Username \'{0}\' failed to recieve message'.format(pm_info[0]))
                     else:
                         self.send_one(rclient.username, 'Username \'{0}\' does not exist'.format(pm_info[0]))
 
@@ -185,7 +186,7 @@ if __name__ == '__main__':
 
     if '-h' in argv or '--help' in argv or len(argv) == 0:
         print(show_help)
-        quit()
+        sys.exit()
 
     if len(argv) >= 2:
         sock_addr, sock_port = argv[0], int(argv[1])
