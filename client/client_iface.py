@@ -27,6 +27,7 @@ co_window_x, co_window_y = 1000, 800
 Window.size = (in_window_x, in_window_y)
 
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+sock.settimeout(None)
 client = manager = None
 main_check = False
 
@@ -131,7 +132,9 @@ class MainScreen(Screen):
         self.ids['roll_box'].focus = True
 
         while True:
-            self.ids['msg_box'].text += '\n' + client.handle_read() + '\n----------------------------------------------'
+            in_message = client.handle_read()
+            if in_message != '':
+                self.ids['msg_box'].text += '\n' + in_message + '\n----------------------------------------------'
 
     def _submit(self):
         if self.ids['roll_box'].text != '':

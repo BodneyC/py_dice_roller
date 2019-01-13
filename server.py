@@ -33,9 +33,11 @@ class Server:
 
         self.password = password
         self.remote_clients = {}
-        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
+        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self.sock.settimeout(None)
+
         self.sock.bind(address)
         self.sock.listen(1)
 
@@ -100,13 +102,31 @@ class Server:
                 if line[5:].startswith('/nick'):
                     rclient.set_nickname(line.split(' ', 1)[1])
                     
+                elif line[5:].startswith('/pm'):
+                    pm_info = line[5:].split(' ', 2)[1:]
+                    put_string = self.name_string(rclient) + ' (PM)\n    ' + pm_info[1]
+                    if pm_info[0] in self.remote_clients.keys():
+                        try:
+                            self.remote_clients[pm_info[0]].get_conn().sendall(put_string.encode())
+                        except IOError as msg:
+                            self.log.warn('User \'{0}\' unable to recieve, deleting\n  {1}'.format(pm_info[0], msg))
+                            del self.remote_clients[pm_info[0]]
+                            return
+                    else:
+                        try:
+                            rclient.get_conn().sendall('Username \'{0}\' does not exist'.format(pm_info[0]).encode())
+                        except socket.error as e:
+                            self.log.warn(e)
+                            del self.remote_clients[rclient.username]
+                            return
 
-                return
+
+                continue
 
             roll_info = dice_roll(line[5:])
             roll_list = self.format_string(line[5:])
 
-            put_string = rclient.username + ' \'' + rclient.nickname + '\'' + ':\n    ' + roll_list + '\n    ' + roll_info
+            put_string = self.name_string(rclient) + '\n    ' + roll_list + '\n    ' + roll_info
 
             if roll_info.startswith('Invalid'):
                 try:
@@ -118,6 +138,12 @@ class Server:
             else:
                 self.log.info('Message \'{0}\''.format(put_string))
                 self.broadcast(put_string)
+
+    def name_string(self, rclient):
+        if rclient.username == rclient.nickname:
+            return rclient.username
+        else:
+            return rclient.username + '\'' + rclient.nickname + '\' '
 
     # Errors catch in self.handle_accept()
     def check_connection(self, conn):
@@ -146,6 +172,7 @@ class Server:
     def broadcast(self, message):
         self.log.info('Broadcasting message:\n%s', message)
         for rc_username in self.remote_clients:
+            print("Broadacsting")
             if self.remote_clients[rc_username]:
                 try:
                     self.remote_clients[rc_username].get_conn().sendall(message.encode())
@@ -154,7 +181,6 @@ class Server:
                     del self.remote_clients[rc_username]
 
 if __name__ == '__main__':
-    socket.setdefaulttimeout(100)
     logging.basicConfig(level = logging.INFO)
 
     sock_addr, sock_port, password = 'localhost', 8090, ''
