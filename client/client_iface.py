@@ -183,42 +183,14 @@ class MainScreen(Screen):
                     self.ids['roll_box'].text = self.msg_hist[-self.hist_n]
                 else:
                     self.ids['roll_box'].text = ''
-    
+
     # Couldn't think of a way to DRY these up
-    def _preset_1(self):
+    def _preset(self, i):
         if self.ids['edit_switch'].active:
-            self.ids['preset_1'].text = self.ids['roll_box'].text
+            self.ids['preset_' + str(i)].text = self.ids['roll_box'].text
         else:
             if self.ids['preset_1'].text != '':
-                self.text_roll('preset_1')
-
-    def _preset_2(self):
-        if self.ids['edit_switch'].active:
-            self.ids['preset_2'].text = self.ids['roll_box'].text
-        else:
-            if self.ids['preset_2'].text != '':
-                self.text_roll('preset_2')
-
-    def _preset_3(self):
-        if self.ids['edit_switch'].active:
-            self.ids['preset_3'].text = self.ids['roll_box'].text
-        else:
-            if self.ids['preset_3'].text != '':
-                self.text_roll('preset_3')
-
-    def _preset_4(self):
-        if self.ids['edit_switch'].active:
-            self.ids['preset_4'].text = self.ids['roll_box'].text
-        else:
-            if self.ids['preset_4'].text != '':
-                self.text_roll('preset_4')
-
-    def _preset_5(self):
-        if self.ids['edit_switch'].active:
-            self.ids['preset_5'].text = self.ids['roll_box'].text
-        else:
-            if self.ids['preset_5'].text != '':
-                self.text_roll('preset_5')
+                self.text_roll('preset_' + str(i))
 
     def text_roll(self, box_id):
         global client
