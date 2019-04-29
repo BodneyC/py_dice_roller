@@ -28,12 +28,12 @@ def roll(dice_num):
 
     lows, highs, roll_vals = roll_dice(dice_num)
 
-    out_string = '\nRolls: ' + str(roll_vals)
+    out_string = 'Rolls: ' + str(roll_vals)
 
     if lows >= dice_num / 2:
-        out_string += f'\n\n{lows}/{dice_num} ones: Crit fail\n'
+        out_string += f'\n\n{lows}/{dice_num} ones: Crit fail'
     else:
-        out_string += f'\n\n{highs} fives and sixes\n'
+        out_string += f'\n\n{highs} fives and sixes'
 
     return out_string
 

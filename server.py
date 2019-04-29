@@ -5,10 +5,17 @@ import socket
 import logging
 import datetime
 from threading import Thread
+from argparse import ArgumentParser
 
-from dice_roller import roll as dice_roll
+import dnd_dice_roller
+import sr_dice_roller
 
 BUF_SIZE = 1024
+
+log_file = './server_logs/' + datetime.datetime.now().strftime("%I:%M%p-%y-%m-%d") + '.log'
+logging.FileHandler(log_file, mode = 'a', encoding = None, delay = False)
+logging.basicConfig(filename = log_file, level = logging.INFO)
+logging.getLogger().addHandler(logging.StreamHandler())
 
 class RClient:
     def __init__(self, username, conn, host):
@@ -26,20 +33,39 @@ class RClient:
 class Server:
     log = logging.getLogger('Server')
 
-    def __init__(self, address = ('localhost', 8090), password = 'fish'):
-        self.log.info('Server started on: {0}\n     Password is: {1}'.format(address, password))
-
+    def __init__(self, address, game_type, password):
+        self.address = address
+        self.game_type = game_type
         self.password = password
         self.remote_clients = {}
-
+        self.dice_roll = None
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.sock.settimeout(None)
 
-        self.sock.bind(address)
+    def start_server(self):
+        if self.game_type == 'dungeons':
+            self.dice_roll = dnd_dice_roller.roll
+        elif self.game_type == 'shadowrun':
+            self.dice_roll = sr_dice_roller.roll
+        else:
+            self.log.error(f'{self.game_type} not accepted game type, exiting...')
+            return False
+        try:
+            self.sock.bind(self.address)
+        except PermissionError:
+            self.log.error(f'Cannot bind to {self.address}, exiting...')
+            return False
         self.sock.listen(1)
+        self.log.info(f'Server started on: {self.address}\n     Password is: {self.password}')
 
-        self.run_loop()
+        try:
+            self.run_loop()
+        except (KeyboardInterrupt, EOFError):
+            self.log.error('Keyboard interrupt')
+            return True
+        except Exception:
+            return False
 
     def run_loop(self):
         thr_pool = []
@@ -108,7 +134,7 @@ class Server:
                 self.log.warn(e)
                 del self.remote_clients[rclient.username]
                 return
-            
+
             if line.startswith('q') or line.startswith('Q'):
                 self.log.info('User \'{0}\' left'.format(rclient.username))
                 del self.remote_clients[rclient.username]
@@ -119,7 +145,7 @@ class Server:
                     rclient.set_nickname(line.split(' ', 1)[1])
                     put_string = 'Nickname chaged to \'' + rclient.nickname + '\''
                     self.send_one(rclient.username, put_string)
-                    
+
                 elif line[5:].startswith('/pm'):
                     pm_info = line[5:].split(' ', 2)[1:]
                     put_string = self._name_string(rclient) + ' (PM)\n    ' + pm_info[1]
@@ -134,8 +160,11 @@ class Server:
 
                 continue
 
-            roll_info = dice_roll(line[5:])
-            roll_list = self.format_string(line[5:])
+            roll_info = self.dice_roll(line[5:])
+            if self.game_type in ('dungeons'):
+                roll_list = self.format_string(line[5:])
+            else:
+                roll_list = line[5:]
 
             put_string = self._name_string(rclient) + '\n    ' + roll_list + '\n    ' + roll_info
 
@@ -178,25 +207,20 @@ class Server:
             if self.remote_clients[rc_username]:
                 self.send_one(rc_username, message)
 
+def parse_args():
+    parser = ArgumentParser()
+    parser.add_argument('-a', '--address', default='localhost')
+    parser.add_argument('-p', '--port', default=8090, type=int)
+    parser.add_argument('--pswd', '--password', default='')
+    parser.add_argument('-t', '--game_type', default='dungeons')
+    return parser.parse_args()
+
+def main():
+    args = parse_args()
+    server = Server((args.address, args.port), args.game_type, args.pswd)
+    if not server.start_server():
+        sys.exit(1)
+
 if __name__ == '__main__':
-    log_file = './server_logs/' + datetime.datetime.now().strftime("%I:%M%p-%y-%m-%d") + '.log'
-    logging.FileHandler(log_file, mode = 'a', encoding = None, delay = False)
-    logging.basicConfig(filename = log_file, level = logging.INFO)
-    logging.getLogger().addHandler(logging.StreamHandler())
+    main()
 
-    sock_addr, sock_port, password = 'localhost', 8090, ''
-
-    show_help = 'Usage\n\t./server.rb <address> <port> [<password>]'
-
-    argv = sys.argv[1:]
-
-    if '-h' in argv or '--help' in argv or len(argv) == 0:
-        print(show_help)
-        sys.exit()
-
-    if len(argv) >= 2:
-        sock_addr, sock_port = argv[0], int(argv[1])
-    if len(argv) == 3:
-        pswd = argv[2]
-
-    Server((sock_addr, sock_port), password)
